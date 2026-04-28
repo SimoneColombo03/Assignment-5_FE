@@ -56,26 +56,27 @@ function spot_vols = bootstrap_vol(flat_vols_at_strike, strike, fwd_libor, ...
 
         idx_left  = last_caplet_idx(i-1);          % bucket left end (vol known)
         idx_right = last_caplet_idx(i);            % bucket right end (vol unknown)
-        idx_new   = (idx_left+1):idx_right;        % caplets to be calibrated
+        idx_to_calibrate = (idx_left+1):idx_right;% caplets to be calibrated
 
         sigma_left = spot_vols(idx_left);
         T_left     = T_expiry(idx_left);
         T_right    = T_expiry(idx_right);
 
         T_knots     = [T_left; T_right];
-        T_to_interp = T_expiry(idx_new);
+        T_to_interp = T_expiry(idx_to_calibrate);
 
         target_price_diff = cap_market_price(i) - cap_market_price(i-1);
 
         residual = @(sigma_right) ...
             cap_increment_price(sigma_right, sigma_left, T_knots, T_to_interp, ...
-                                fwd_libor(idx_new), strike, r_eff(idx_new), ...
-                                T_expiry(idx_new), yf_caplets(idx_new)) ...
+                                fwd_libor(idx_to_calibrate), strike, r_eff(idx_to_calibrate), ...
+                                T_expiry(idx_to_calibrate), yf_caplets(idx_to_calibrate)) ...
             - target_price_diff;
 
-        sigma_right = fzero( residual, flat_vols_at_strike(i) );
-
-        spot_vols(idx_new) = interp1( T_knots, [sigma_left; sigma_right], ...
+        sigma_right = fzero( residual, flat_vols_at_strike(i));
+        
+        
+        spot_vols(idx_to_calibrate) = interp1( T_knots, [sigma_left; sigma_right], ...
                                       T_to_interp, 'linear' );
     end
 end
@@ -87,6 +88,6 @@ function p = cap_increment_price(sigma_right, sigma_left, T_knots, T_to_interp, 
 % between (T_left, sigma_left) and (T_right, sigma_right).
     sigma_caplets = interp1( T_knots, [sigma_left; sigma_right], ...
                              T_to_interp, 'linear' );
-    caplet_prices = blkprice( fwd, K, r, T, sigma_caplets );
+    caplet_prices = blkprice(fwd, K, r, T, sigma_caplets );
     p = sum( yf .* caplet_prices );
 end

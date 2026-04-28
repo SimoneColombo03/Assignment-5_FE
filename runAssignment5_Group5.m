@@ -2,7 +2,7 @@
 % group 5, AY2025-2026
 %
 
-addpath('bootstrap','ex_1')
+addpath('bootstrap',genpath('ex_1'));
 formatData='dd/mm/yyyy';
 [datesSet, ratesSet] = readExcelData_jack('MktData_CurveBootstrap.xls', formatData);
 [dates, discounts, ~] = bootstrap(datesSet, ratesSet); 
@@ -25,13 +25,13 @@ start_date    = datenum('19/02/2008', formatData);
 maturity_date = business_date_offset(start_date, 'year_offset', 10, ...
                                      'convention', 'following');
  
-X = compute_upfront(notional, ...
+[X,pv_A,pv_B] = compute_upfront(notional, ...
                     spot_vols_matrix, flat_vols.strike(:), ...
                     fwd_libor, yf_caplets, T_expiry, df_caplets, ...
                     dates, discounts, ...
                     start_date, maturity_date, ...
                     first_coupon_rate, mode_after_6y);
- 
+
 fprintf('\n----- POINT (b) Structured bond upfront -----\n');
 fprintf('  Mode (after 6y branch) : %s\n', mode_after_6y);
 fprintf('  Upfront X              : %.4f%%  of notional\n', X*100);
