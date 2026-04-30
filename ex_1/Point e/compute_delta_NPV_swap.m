@@ -22,7 +22,7 @@ function delta_NPV = compute_delta_NPV_swap(ratesSet,dates,discounts, ...
         df_bump = get_discount_factor_by_zero_rates_linear_interp(start_date,maturity_date,dates,bumped_discounts(:,j));
         BPV_shifted = BasisPointValueFloating(start_date,maturity_date_unadj,dates,bumped_discounts(:,j));
         BPV_base = BasisPointValueFloating(start_date,maturity_date_unadj,dates,discounts);
-        delta_NPV(i,j) = df_bump - df_base + swap_rates(i)*(BPV_shifted-BPV_base);
+        delta_NPV(i,j) = -(df_bump - df_base) - swap_rates(i)*(BPV_shifted-BPV_base);
         end
      end
 end
