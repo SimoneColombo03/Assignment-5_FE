@@ -1,4 +1,4 @@
-function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
+function [price, std_err] = price_exotic_cap_V_elisa_mc(v_bmm, ...
                                 spot_vol_parameters, lambda, n_caplets, ...
                                 spread, n_paths, ~)
 
@@ -69,7 +69,7 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 
     % --- Fix seed for reproducibility ----------------------------------
      rng(42); 
-     
+
     % --- Default arguments -----------------------------------------------
     if nargin < 6 || isempty(n_paths),    n_paths    = 1e5; end
     if nargin < 5 || isempty(spread),     spread     = 5e-4; end

@@ -129,4 +129,4 @@ fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price, se);
 [price_V2, se_V2] = price_exotic_cap_V_elisa_mc(v_bmm, spot_vol_parameters, ...
                                   0.1, 15, 5e-4, 1e5, +1);
 fprintf('\n----- Case Study 2: Exotic cap -----\n');
-fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price, se);
+fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price_V2, se_V2);
