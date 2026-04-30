@@ -78,7 +78,7 @@ delta_NPV = compute_delta_NPV_swap(ratesSet, dates, discounts, start_date, coars
 notional_swaps = compute_portfolio_hedged_with_swap(coarse, delta_NPV);
 
 % Display Hedging Results
-fprintf('Hedge Ratios (Swap Notionals to buy/sell):\n');
+fprintf('\nHedge Ratios (Swap Notionals to buy/sell):\n');
 disp(notional_swaps);
 %% f. Hedge vega with caps
 % Calculate the Structured Bond's Vega for buckets (0-6y and 6-10y).
@@ -98,7 +98,7 @@ cap_hedging_notionals = compute_vega_hedge_notionals(st_bond_vega_results, ...
                                                     vega_sensitivity_matrix);
 
 % Display Vega Hedging Results
- fprintf('Vega Hedging:\n');
+ fprintf('\nVega Hedging:\n');
  disp(cap_hedging_notionals);
 
 %% g. Correction digital risk
@@ -121,6 +121,12 @@ v_bmm = calibrate_bmm_vols(spot_vols_matrix, flat_vols.strike(:), ...
                            spot_vol_parameters, 15);
 
 [price, se] = price_exotic_cap_mc(v_bmm, spot_vol_parameters, ...
+                                  0.1, 15, 5e-4, 1e5, +1);
+fprintf('\n----- Case Study 2: Exotic cap -----\n');
+fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price, se);
+
+
+[price_V2, se_V2] = price_exotic_cap_V_elisa_mc(v_bmm, spot_vol_parameters, ...
                                   0.1, 15, 5e-4, 1e5, +1);
 fprintf('\n----- Case Study 2: Exotic cap -----\n');
 fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price, se);
