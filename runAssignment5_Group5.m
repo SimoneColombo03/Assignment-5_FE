@@ -68,7 +68,7 @@ fprintf('   parallel: %12.2f EUR  (sanity check)\n', bucket.parallel_DV01_XX);
 delta_NPV = compute_delta_NPV_swap(ratesSet,dates,discounts, ...
     start_date,coarse);
 notional_swaps = compute_portfolio_hedged_with_swap(coarse,delta_NPV);
-fprintf('Hedge Ratios:\n');
+fprintf('Hedge Ratios Swaps:\n');
 disp(notional_swaps);
 %% f. Hedge vega with cap
 output = coarse_vega(dates, discounts, flat_vols, notional, ...
@@ -77,7 +77,7 @@ output = coarse_vega(dates, discounts, flat_vols, notional, ...
                                    spot_vol_parameters, X);
  DV01_cap = compute_delta_NPV_cap(flat_vols,ratesSet,spot_vols_matrix,output,dates, discounts);
  notional_caps = compute_portfolio_hedged_with_cap(output,DV01_cap);
- fprintf('Hedge Ratios:\n');
+ fprintf('Hedge Ratios Caps:\n');
  disp(notional_caps);
 
 %% g. Correction digital risk
