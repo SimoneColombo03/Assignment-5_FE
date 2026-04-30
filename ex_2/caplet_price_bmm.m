@@ -1,4 +1,4 @@
-function price = caplet_price_bmm(F, K, B_pay, B_reset, delta, T, v)
+function price = caplet_price_bmm(K, B_pay, B_reset, delta, T, v)
 
 % CAPLET_PRICE_BMM  Caplet price under the Bond Market Model (BMM).
 %
@@ -19,7 +19,6 @@ function price = caplet_price_bmm(F, K, B_pay, B_reset, delta, T, v)
 %   bond-payoff units back into Libor-payoff units.
 %
 %   INPUTS:
-%   F       - forward Libor F = L(t0; T_i, T_{i+1})
 %   K       - caplet strike (decimal)
 %   B_pay   - discount factor B(0, T_{i+1}) (payment date of the Libor coupon)
 %   B_reset - discount factor B(0, T_i)     (reset/expiry date of the caplet)
