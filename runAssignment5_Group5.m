@@ -19,7 +19,7 @@ spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols,spot_vol_parameters);
 %% b. Upfront X% of the structured bond
 notional          = 50e6;
 first_coupon_rate = 0.04;
-mode_after_6y     = 'cap';        % or 'digital'
+mode_after_6y     = 'digital';        % or 'digital'
  
 start_date    = datenum('19/02/2008', formatData);
 maturity_date_unadj = start_date +datenum(years(10));

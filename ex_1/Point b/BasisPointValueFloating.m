@@ -1,6 +1,5 @@
 function BPV = BasisPointValueFloating(reference_date, maturity_date, dates, discounts)
 % Compute the Basis Point Value (BPV) of the floating leg of a swap.
-% Vectorized version.
 %
 % INPUTS:
 % reference_date : Valuation date (datetime or datenum)

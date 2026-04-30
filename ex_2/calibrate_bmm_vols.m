@@ -52,7 +52,7 @@ function v_bmm = calibrate_bmm_vols(spot_vols_matrix, strike_grid, ...
         caplet_LMM = d * Bp * ( F * normcdf(d1L) - K * normcdf(d2L) );
 
         % Invert BMM (Black-bond) for v_i so that BMM price matches LMM price
-        residual = @(v) caplet_price_bmm(F, K, Bp, Br, d, T, v) - caplet_LMM;
+        residual = @(v) caplet_price_bmm(K, Bp, Br, d, T, v) - caplet_LMM;
 
         % Initial guess: low-rates approximation
         v0       = sigma_LMM * d * F / (1 + d * F);
