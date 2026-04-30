@@ -2,7 +2,7 @@
 % group 5, AY2025-2026
 %
 
-addpath('bootstrap',genpath('ex_1'));
+addpath('bootstrap',genpath('ex_1'),'ex_2');
 formatData='dd/mm/yyyy';
 [datesSet, ratesSet] = readExcelData_jack('MktData_CurveBootstrap.xls', formatData);
 [dates, discounts, ~] = bootstrap(datesSet, ratesSet); 
