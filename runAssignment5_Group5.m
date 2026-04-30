@@ -83,5 +83,10 @@ output = coarse_vega(dates, discounts, flat_vols, notional, ...
 %% g. Correction digital risk
 
 
-
 %% Case study 2
+
+v_bmm = calibrate_bmm_vols(spot_vols_matrix, flat_vols.strike(:), ...
+                           spot_vol_parameters, 15);
+
+[price, se] = price_exotic_cap_mc(v_bmm, spot_vol_parameters, ...
+                                  0.1, 15, 5e-4, 1e5, +1);
