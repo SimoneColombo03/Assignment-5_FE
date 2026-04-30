@@ -1,5 +1,4 @@
-function spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols, fwd_libor, ...
-                                yf_caplets, T_expiry, r_eff)
+function spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols,spot_vol_parameters)
 
 % COMPUTE_SPOT_VOLS_EUR_3M  Strip caplet spot vols on the Euribor 3m grid for
 % every strike of the flat-vol surface.
@@ -13,7 +12,7 @@ function spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols, fwd_libor, ...
 %   from compute_caplets_maturities and therefore already exclude the first
 %   (deterministic) Libor: their length is M = 4*maxY - 1.
 %
-%   INPUTS:
+%   INPUTS: 
 %   flat_vols    - struct with fields:
 %                    .strike   : row vector of strikes (decimal)
 %                    .maturity : column vector of cap maturities in years
@@ -30,6 +29,7 @@ function spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols, fwd_libor, ...
     strikes        = flat_vols.strike(:);
     cap_maturities = flat_vols.maturity(:);
     flat_matrix    = flat_vols.flatVol;
+    fwd_libor = spot_vol_parameters.fwd_libor;
 
     n_strikes = numel(strikes);
     M         = numel(fwd_libor);
@@ -38,7 +38,7 @@ function spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols, fwd_libor, ...
     for k = 1:n_strikes
         spot_vols_matrix(:, k) = bootstrap_vol( ...
             flat_matrix(:, k), strikes(k), ...
-            fwd_libor, yf_caplets, T_expiry, r_eff, cap_maturities );
+            spot_vol_parameters,cap_maturities);
     end
 
 end

@@ -1,5 +1,4 @@
-function spot_vols = bootstrap_vol(flat_vols_at_strike, strike, fwd_libor, ...
-                                   yf_caplets, T_expiry, r_eff, cap_maturities)
+function spot_vols = bootstrap_vol(flat_vols_at_strike, strike, spot_vol_parameters,cap_maturities)
 
 % BOOTSTRAP_VOL  Strip caplet (spot) volatilities from flat cap volatilities
 % at a single strike, assuming caplet vol is piecewise linear in T_expiry
@@ -30,6 +29,11 @@ function spot_vols = bootstrap_vol(flat_vols_at_strike, strike, fwd_libor, ...
 %   OUTPUT:
 %   spot_vols           - column of caplet spot vols (length M)
 
+    fwd_libor = spot_vol_parameters.fwd_libor(:);
+    yf_caplets = spot_vol_parameters.yf_between_caplets(:);
+    T_expiry = spot_vol_parameters.T_expiry(:);
+    r_eff = spot_vol_parameters.r_eff(:);
+    
     n_caplets = numel(fwd_libor);
     n_caps    = numel(cap_maturities);
     spot_vols = zeros(n_caplets, 1);

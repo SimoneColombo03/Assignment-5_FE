@@ -17,8 +17,16 @@ function [dates, discounts, zeroRates] = bootstrap(datesSet, ratesSet, shift)
 %                  .depos      : Nx2 matrix of deposit rates [BID, ASK]
 %                  .futures    : Nx2 matrix of futures rates [BID, ASK]
 %                  .swaps      : Nx2 matrix of swap rates    [BID, ASK]
-%   shift      - (optional) parallel shift in basis points applied to all
-%                market rates (depos, futures, swaps). Default 0.
+%   shift      - (optional) shift in basis points to apply to the rates.
+%                It can be:
+%                  * a scalar              -> applied to ALL rates (parallel)
+%                  * a struct with fields  -> applied per-category, where
+%                      .depos   : column vector, length = numel(datesSet.depos)
+%                      .futures : column vector, length = size(datesSet.futures,1)
+%                      .swaps   : column vector, length = numel(datesSet.swaps)
+%                    Any missing field is treated as zeros. Useful for
+%                    instrument-by-instrument bumping (delta-bucket DV01).
+%                Default: 0 (no shift).
 %
 %   OUTPUTS:
 %   dates      - vector of dates (settlement at position 1)
@@ -28,7 +36,18 @@ function [dates, discounts, zeroRates] = bootstrap(datesSet, ratesSet, shift)
 if nargin < 3 || isempty(shift)
     shift = 0;
 end
-bump = shift * 1e-4;   % bp -> decimal
+
+% Resolve shift into three column vectors of decimal bumps, one per category.
+% For a scalar input we broadcast; for a struct we read each field.
+if isstruct(shift)
+    bump_depos = get_field_or_zero(shift, 'depos',   numel(datesSet.depos))   * 1e-4;
+    bump_fut   = get_field_or_zero(shift, 'futures', size(datesSet.futures,1)) * 1e-4;
+    bump_swaps = get_field_or_zero(shift, 'swaps',   numel(datesSet.swaps))   * 1e-4;
+else
+    bump_depos = shift * 1e-4 * ones(numel(datesSet.depos), 1);
+    bump_fut   = shift * 1e-4 * ones(size(datesSet.futures,1), 1);
+    bump_swaps = shift * 1e-4 * ones(numel(datesSet.swaps), 1);
+end
 
 reference_date = datesSet.settlement;
 
@@ -42,7 +61,7 @@ DC_30E360 = 6;
 
 mask_depo  = datesSet.depos <= datesSet.futures(1,1);
 depo_dates = datesSet.depos(mask_depo);
-depo_rates = mean(ratesSet.depos(mask_depo, :), 2) + bump;
+depo_rates = mean(ratesSet.depos(mask_depo, :), 2) + bump_depos(mask_depo);
 
 yf_depo   = yearfrac(reference_date, depo_dates, DC_ACT360);
 B_depo    = 1 ./ (1 + yf_depo .* depo_rates);
@@ -57,7 +76,7 @@ discounts = B_depo;
 mask_fut   = datesSet.futures(:,2) <= datesSet.swaps(2);
 fut_settle = datesSet.futures(mask_fut, 1);
 fut_expiry = datesSet.futures(mask_fut, 2);
-fut_rates  = mean(ratesSet.futures(mask_fut, :), 2) + bump;
+fut_rates  = mean(ratesSet.futures(mask_fut, :), 2) + bump_fut(mask_fut);
 
 yf_fut        = yearfrac(fut_settle, fut_expiry, DC_ACT360);
 fwd_discounts = 1 ./ (1 + yf_fut .* fut_rates);
@@ -85,7 +104,7 @@ coupon_dates_all = zeros(0, 1);
 for y = 1:60
     d_pay = datenum(ref_dt + calyears(y));
     d_pay = business_date_offset(d_pay, 'convention', 'modified_following');
-    coupon_dates_all(end+1, 1) = d_pay; 
+    coupon_dates_all(end+1, 1) = d_pay;
     if d_pay >= swap_max
         break
     end
@@ -96,25 +115,18 @@ prev_grid = [reference_date; coupon_dates_all(1:end-1)];
 yf_grid   = yearfrac(prev_grid, coupon_dates_all, DC_30E360);
 
 % --- Pre-allocate B_grid and fill points already covered ------------------
-% After depos+futures the curve already covers some grid dates (typically
-% 1Y from depos via interp, and 2Y if it coincides with a futures expiry).
-% We fill the rest by interpolation on the current depos+futures curve.
-
 n_grid                   = numel(coupon_dates_all);
 B_grid                   = get_discount_factor_by_zero_rates_linear_interp( ...
                                reference_date, coupon_dates_all, dates, discounts);
 [is_match, loc]          = ismember(coupon_dates_all, dates);
 B_grid(is_match)         = discounts(loc(is_match));
 
-% --- Tolerance-based maturity-to-grid lookup ------------------------------
-% Maps each swap maturity to its index on the annual grid (1-day rounding
-% absorbs any holiday-calendar mismatch between the data file and our grid).
+% --- Swap selection and rate shift ----------------------------------------
 mask_swap  = datesSet.swaps >= datesSet.swaps(2);
 swap_dates = datesSet.swaps(mask_swap);
-swap_rates = mean(ratesSet.swaps(mask_swap, :), 2) + bump;
+swap_rates = mean(ratesSet.swaps(mask_swap, :), 2) + bump_swaps(mask_swap);
 
-% Vectorised nearest-neighbour matching: for each swap_date find its grid
-% index using a tolerance of a few days.
+% Maturity-to-grid lookup (tolerance for holiday-calendar mismatches).
 [diffs, swap_grid_idx] = min(abs(coupon_dates_all - swap_dates'), [], 1);
 swap_grid_idx          = swap_grid_idx(:);
 if any(diffs > 4)
@@ -122,32 +134,23 @@ if any(diffs > 4)
 end
 
 % --- Loop on swaps (sequential dependency: B(t0,T_N) becomes a pillar) ----
-% Inside the loop everything is O(1) vectorised arithmetic.
 for k = 1:numel(swap_dates)
 
     idx_end = swap_grid_idx(k);
 
-    % Skip swaps already covered by the futures strip (typically the 2Y)
     if swap_dates(k) <= dates(end)
         continue
     end
 
-    % BPV = sum_{j=1}^{N-1} delta_j * B_j  -- vectorised, no recomputation
-    BPV = yf_grid(1:idx_end-1)' * B_grid(1:idx_end-1);
-
-    % Last-period yearfrac
+    BPV     = yf_grid(1:idx_end-1)' * B_grid(1:idx_end-1);
     yf_last = yf_grid(idx_end);
 
-    % Par-swap condition
     df = (1 - swap_rates(k) * BPV) / (1 + swap_rates(k) * yf_last);
 
-    % B_grid is updated in place: this swap's maturity is now an exact
-    % pillar that all longer swaps will reuse with no further interpolation.
     B_grid(idx_end) = df;
 
     dates     = [dates;     swap_dates(k)];
     discounts = [discounts; df];
-
 end
 
 %% ========================================================================
@@ -160,4 +163,19 @@ dates     = [reference_date; dates];
 discounts = [1; discounts];
 zeroRates = [0; zeroRates];
 
+end
+
+
+function v = get_field_or_zero(s, fname, expected_len)
+% Return s.(fname) as a column vector of length expected_len.
+% If the field is missing, return zeros. If present but wrong-sized, error.
+    if isfield(s, fname) && ~isempty(s.(fname))
+        v = s.(fname)(:);
+        if numel(v) ~= expected_len
+            error(['shift.%s has %d elements but the corresponding ' ...
+                   'instrument vector has %d.'], fname, numel(v), expected_len);
+        end
+    else
+        v = zeros(expected_len, 1);
+    end
 end

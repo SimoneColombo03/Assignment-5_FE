@@ -1,5 +1,4 @@
-function [caplets_payment_dates, fwd_libor, yf_caplets, df_caplets, T_expiry, r_eff] = ...
-    compute_caplets_maturities(flat_vols, dates_bootstrap, discounts)
+function output = compute_caplets_maturities(flat_vols, dates_bootstrap, discounts)
 
 % COMPUTE_CAPLETS_MATURITIES  Build the quarterly Euribor 3m caplet grid
 % used for cap (flat-vol) -> caplet (spot-vol) stripping.
@@ -40,8 +39,23 @@ function [caplets_payment_dates, fwd_libor, yf_caplets, df_caplets, T_expiry, r_
     yf_caplets = yearfrac(reset_dates, caplets_payment_dates, DC_ACT360);
     fwd_libor  = (df_reset ./ df_caplets - 1) ./ yf_caplets;
     T_expiry   = yearfrac(t0, reset_dates, DC_ACT365);
+    T_payment  = yearfrac(t0, caplets_payment_dates, DC_ACT365);
 
     % Compounded interest rate at payment dates:
-    r_eff = -log(df_caplets) ./ T_expiry; 
+    r_eff = -log(df_caplets) ./ T_payment; 
+
+    spot_vol_parameters.payment_dates = caplets_payment_dates;
+    spot_vol_parameters.T_expiry = T_expiry;
+    spot_vol_parameters.fwd_libor = fwd_libor;
+    spot_vol_parameters.yf_between_caplets = yf_caplets;
+    spot_vol_parameters.df_caplets = df_caplets;
+    spot_vol_parameters.r_eff = r_eff;
+    % Return the output structure containing spot vol parameters
+    output = struct('payment_dates', spot_vol_parameters.payment_dates, ...
+                    'T_expiry', spot_vol_parameters.T_expiry, ...
+                    'fwd_libor', spot_vol_parameters.fwd_libor, ...
+                    'yf_between_caplets', spot_vol_parameters.yf_between_caplets, ...
+                    'df_caplets', spot_vol_parameters.df_caplets, ...
+                    'r_eff', spot_vol_parameters.r_eff);
 
 end
