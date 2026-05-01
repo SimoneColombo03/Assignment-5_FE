@@ -1,4 +1,4 @@
-function [dates, rates] = readExcelData_jack(filename, formatData)
+function [dates, rates] = readExcelData_MAC(filename, formatData)
 % Reads data from excel
 %  It reads bid/ask prices and relevant dates
 %  All input rates are in % units
