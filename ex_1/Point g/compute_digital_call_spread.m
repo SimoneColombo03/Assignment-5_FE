@@ -1,6 +1,5 @@
-function digital_cs_value = compute_digital_call_spread(fwd_libor, T_expiry, df_payment, yf_caplet, ...
-                                                        K, epsilon, gap, ...
-                                                        spot_vols_matrix, strike_grid, caplet_idx)
+function digital_cs_value = compute_digital_call_spread(fwd_libor, T_expiry, df_payment, ...
+     yf_caplet, K, epsilon, gap, spot_vols_matrix, strike_grid, caplet_idx)
 % COMPUTE_DIGITAL_CALL_SPREAD - Prices a digital option using Call Spread replication.
 %
 %
@@ -23,7 +22,7 @@ function digital_cs_value = compute_digital_call_spread(fwd_libor, T_expiry, df_
     K_low = K;
     K_up  = K + epsilon;
 
-    % Interpolate volatilities for both strikes to capture the volatility skew[cite: 1]
+    % Interpolate volatilities for both strikes to capture the volatility skew
     vol_low = interp1(strike_grid, spot_vols_matrix(caplet_idx,:), K_low, 'spline');
     vol_up  = interp1(strike_grid, spot_vols_matrix(caplet_idx,:), K_up, 'spline');
 

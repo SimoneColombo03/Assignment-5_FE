@@ -1,7 +1,8 @@
 function price_coupon = compute_price_coupon_up_to_3years_dig_risk( ...
         fwd_libor, spot_vol_caplet, df_payment, T_expiry, yf_caplet, ...
         spot_vols_matrix, strike_grid, caplet_idx)
-% COMPUTE_PRICE_COUPON_UP_TO_3YEARS - Prices coupons for the first 3 years of the bond
+% COMPUTE_PRICE_COUPON_UP_TO_3YEARS_DIG_RISK - Prices coupons for the first 3 years
+% of the bond considering digital risk
 %
 % This function prices a floating rate coupon with an embedded cap and a digital 
 % jump. It addresses the "Digital Risk" by using a Call Spread replication 
@@ -43,7 +44,7 @@ function price_coupon = compute_price_coupon_up_to_3years_dig_risk( ...
                                               spot_vols_matrix, strike_grid, caplet_idx);
 
     % 4. Total Present Value Calculation
-    % NPV = PV(Floating Leg + Spread) - PV(Caplet) - PV(Digital Adjustment)[cite: 1]
+    % NPV = PV(Floating Leg + Spread) - PV(Caplet) - PV(Digital Adjustment)
     price_coupon = yf_caplet * df_payment * (fwd_libor + spread) - caplet_val - digital_val;
 
 end

@@ -123,16 +123,17 @@ fprintf('  Upfront X              : %.4f%%  of notional\n', upfront_with_digital
 fprintf('  Upfront amount         : %.2f EUR\n', upfront_with_digital_risk*notional);
 
 %% Case study 2
-
+% Parameters
 lambda = 0.1;
-n_coupon = 15;
+n_coupon = 15; % number of reset/payment dates
 spread = 5e-4;
-n_simulations = 1e6;
+n_simulations = 1e6; % number of Monte Carlo simulations
 
-
+% We find the BMM volatilities
 v_bmm = calibrate_bmm_vols(spot_vols_matrix, flat_vols.strike(:), ...
                            spot_vol_parameters, n_coupon);
 
+% We compute the price of the exotic cap via Monte Carlo
 [price_exotic_option, se_mc] = price_exotic_cap_mc(v_bmm, spot_vol_parameters, ...
                                   lambda, n_coupon, spread, n_simulations);
 fprintf('\n----- Case Study 2: Exotic cap -----\n');

@@ -23,7 +23,7 @@ function price = caplet_price_bmm(K, B_pay, B_reset, delta, T, v)
 %   B_pay   - discount factor B(0, T_{i+1}) (payment date of the Libor coupon)
 %   B_reset - discount factor B(0, T_i)     (reset/expiry date of the caplet)
 %   delta   - Act/360 day-count fraction yf(T_i, T_{i+1})
-%   T       - Act/365 year fraction yf(t_0, T_i)  -- volatility horizon
+%   T       - Act/365 year fraction yf(t_0, T_i)
 %   v       - BMM vol of the forward ZCB B(t; T_i, T_{i+1})
 %
 %   OUTPUT:

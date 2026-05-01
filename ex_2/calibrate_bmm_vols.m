@@ -6,7 +6,7 @@ function v_bmm = calibrate_bmm_vols(spot_vols_matrix, strike_grid, ...
 % surface.
 %
 %   For each caplet i = 1, ..., n_caplets:
-%     1) take K_i = F_i(0) (ATM-forward, as required by the assignment);
+%     1) take K_i = F_i(0) (ATM-forward);
 %     2) interpolate sigma_i^LMM on the strike grid (spline) at K_i;
 %     3) compute the LMM caplet price (Black-on-Libor, with delta factor);
 %     4) invert (fzero) the BMM caplet price (Black-on-bond) on v_i.

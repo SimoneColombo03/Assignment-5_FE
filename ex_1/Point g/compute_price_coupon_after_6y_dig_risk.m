@@ -1,33 +1,34 @@
 function price_coupon = compute_price_coupon_after_6y_dig_risk( ...
         fwd_libor, spot_vol_caplet, df_payment, T_expiry, yf_caplet, ...
         mode, spot_vols_matrix, strike_grid, caplet_idx)
-% COMPUTE_PRICE_COUPON_AFTER_6Y - Prices structured coupons from year 6 to maturity[cite: 1].
+% COMPUTE_PRICE_COUPON_AFTER_6Y_DIG_RISK - Prices structured coupons from year 6 to maturity
+% considering digital risk
 %
 % This function handles the final sub-period of the bond. Depending on the 'mode' 
 % selected, it prices either a standard capped floater or a digital-jump payoff.
-% For the digital mode, it applies Call Spread replication to address Digital Risk,
-% ensuring a continuous Delta and incorporating market volatility skew[cite: 1].
-%
+% For the digital mode, it applies Call Spread replication to address
+% Digital Risk.
+
 % PAYOFF LOGIC:
-%   Mode 'cap':     L + 1.10% capped at 5.10% (equivalent to L+1.1% - Caplet@4.00%)[cite: 1].
-%   Mode 'digital': L + 1.30% if L <= 5.40%, else 5.60%[cite: 1].
+%   Mode 'cap':     L + 1.10% capped at 5.10%
+%   Mode 'digital': L + 1.30% if L <= 5.40%, else 5.60%
 %
 % INPUTS:
-%   fwd_libor        - [Scalar] The 3M Forward Euribor rate for the period[cite: 1].
-%   spot_vol_caplet  - [Scalar] Interpolated spot volatility at the relevant strike (4.00% or 5.40%)[cite: 1].
-%   df_payment       - [Scalar] Discount factor to the payment date[cite: 1].
-%   T_expiry         - [Scalar] Time to fixing (years, Act/365)[cite: 1].
-%   yf_caplet        - [Scalar] Accrual factor for the period (years, Act/360)[cite: 1].
-%   mode             - [String] 'cap' or 'digital' to select the payoff structure[cite: 1].
-%   spot_vols_matrix - [Matrix] The stripped caplet spot volatility surface[cite: 1].
-%   strike_grid      - [Vector] The grid of strikes from market data[cite: 1].
-%   caplet_idx       - [Scalar] Index of the caplet maturity in the volatility matrix[cite: 1].
+%   fwd_libor        - [Scalar] The 3M Forward Euribor rate for the period
+%   spot_vol_caplet  - [Scalar] Interpolated spot volatility at the relevant strike
+%   df_payment       - [Scalar] Discount factor to the payment date
+%   T_expiry         - [Scalar] Time to fixing (years, Act/365)
+%   yf_caplet        - [Scalar] Accrual factor for the period (years, Act/360)
+%   mode             - [String] 'cap' or 'digital' to select the payoff structure
+%   spot_vols_matrix - [Matrix] The stripped caplet spot volatility surface
+%   strike_grid      - [Vector] The grid of strikes from market data
+%   caplet_idx       - [Scalar] Index of the caplet maturity in the volatility matrix
 %
 % OUTPUT:
-%   price_coupon     - [Scalar] The present value (PV) of the structured coupon[cite: 1].
-% -------------------------------------------------------------------------
+%   price_coupon     - [Scalar] The net present value (NPV) of the structured coupon
 
-    % Spread for Call Spread replication (1 basis point) to manage digital risk[cite: 1]
+
+    % Spread for Call Spread replication (1 basis point) to manage digital risk
     epsilon = 0.0001; 
 
     if strcmpi(mode, 'cap')
@@ -48,10 +49,10 @@ function price_coupon = compute_price_coupon_after_6y_dig_risk( ...
 
     else
         % --- 2. Digital Payoff Logic (with Risk Correction) ---
-        % Payoff: L + 1.30% if L <= 5.40%, else 5.60%[cite: 1]
-        K_caplet = 0.0540; % Digital threshold[cite: 1]
-        spread   = 0.0130; % Margin over Libor[cite: 1]
-        % Gap calculation: (5.40% + 1.30%) - 5.60% = 1.10%[cite: 1]
+        % Payoff: L + 1.30% if L <= 5.40%, else 5.60%
+        K_caplet = 0.0540; % Digital threshold
+        spread   = 0.0130; % Margin over Libor
+        % Gap calculation: (5.40% + 1.30%) - 5.60% = 1.10%
         gap      = 0.0110; 
         
         % 2a. Vanilla Caplet component at 5.40%
@@ -59,7 +60,7 @@ function price_coupon = compute_price_coupon_after_6y_dig_risk( ...
         d2 = d1 - spot_vol_caplet*sqrt(T_expiry);
         cap_val = yf_caplet * df_payment * (fwd_libor*normcdf(d1) - K_caplet*normcdf(d2));
 
-        % 2b. Digital Risk Correction using Call Spread replication[cite: 1]
+        % 2b. Digital Risk Correction using Call Spread replication
         % This addresses the jump risk at 5.40% by interpolating across the volatility skew.
         digital_val = compute_digital_call_spread(fwd_libor, T_expiry, df_payment, yf_caplet, ...
                                                   K_caplet, epsilon, gap, ...

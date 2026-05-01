@@ -10,9 +10,8 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 %
 %   ----- WHY THE SPOT MEASURE -----
 %   Under the BMM spot measure, the joint dynamics of all forward bonds
-%   B_i(t) := B(t; T_i, T_{i+1}) is a "Markov chain on Reset Dates"
-%   (Baviera 2006, slide 19 of the course notes):
-%
+%   B_i(t) := B(t; T_i, T_{i+1}) is a "Markov chain on Reset Dates":
+%  
 %     * between two consecutive reset dates T_k and T_{k+1}, every "alive"
 %       forward bond B_i (for i > k) evolves as a Geometric Brownian Motion
 %       with constant vol v_i and a deterministic drift built from the vols
@@ -24,8 +23,7 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 %   The whole Brownian innovation is a single vector dW(t) shared by every
 %   alive bond, with INSTANTANEOUS correlation matrix rho_{ij} between the
 %   loadings v_i, v_j (here scalar so the correlation is just rho_{ij}
-%   itself). This is exactly the structure encoded in the "vector with
-%   correlation rho" of the handwritten note.
+%   itself). 
 %
 %   Practically:
 %     1) build the full correlation matrix rho_{ij} = exp(-lambda*delta_ij)
@@ -37,10 +35,9 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 %            log B_i(T_{k+1}) = log B_i(T_k)
 %                              - 0.5 v_i^2 * delta_k        (Ito)
 %                              - rho * sum_{j=k+1..i-1} v_i v_j * delta_k
-%                                                            (Girsanov drift
-%                                                             from spot measure)
+%                                (Girsanov drift from spot measure)
 %                              - v_i * sqrt(delta_k) * dW_k_corr_i
-%        where dW_k_corr_i is the i-th component of L * dW_k;
+%                               where dW_k_corr_i is the i-th component of L * dW_k;
 %     4) at every reset date T_k, freeze B_k(T_k) and multiply it into the
 %        stochastic discount accumulator D(0, T_{k+1});
 %     5) at each payment date T_{i+1}, compute the payoff using the two
@@ -48,8 +45,7 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 %        it with D(0, T_{i+1}), and average over paths.
 %
 %   No measure change is needed because the spot-measure discount is built
-%   path-by-path INSIDE the expectation. This is the cleanest BMM-canonical
-%   pricing scheme.
+%   path-by-path INSIDE the expectation. 
 %
 %   INPUTS:
 %   v_bmm                - [n_caplets x 1] BMM vols at the ATM strike,
@@ -57,10 +53,9 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
 %   spot_vol_parameters  - struct from compute_caplets_maturities
 %   lambda               - decay parameter of the correlation
 %                          (rho_{ij} = exp(-lambda * |T_i - T_j|), Act/365)
-%                          default 0.1
-%   n_caplets            - number of coupons (default 15 for the 4y exotic)
-%   spread               - constant subtracted in payoff (default 5e-4)
-%   n_paths              - MC paths (default 1e5)
+%   n_caplets            - number of coupons
+%   spread               - constant subtracted in payoff
+%   n_paths              - number of Monte Carlo simulations
 %
 %   OUTPUT:
 %   price                - exotic cap price per unit notional
@@ -69,15 +64,9 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
     % --- Fix seed for reproducibility ----------------------------------
      rng(42); 
 
-    % --- Default arguments -----------------------------------------------
-    if nargin < 6 || isempty(n_paths),    n_paths    = 1e5; end
-    if nargin < 5 || isempty(spread),     spread     = 5e-4; end
-    if nargin < 4 || isempty(n_caplets),  n_caplets  = 15;  end
-    if nargin < 3 || isempty(lambda),     lambda     = 0.1; end
-
     % --- Unpack the caplet stripping grid --------------------------------
     fwd_libor  = spot_vol_parameters.fwd_libor(:);
-    yf_caplets = spot_vol_parameters.yf_between_caplets(:);   % delta_i
+    yf_caplets = spot_vol_parameters.yf_between_caplets(:); % yf between caplets
     T_expiry   = spot_vol_parameters.T_expiry(:);    % yf(t_0, T_i)
 
     % We need n_caplets+1 forward bonds in total: the bond i = 0 covers
@@ -176,7 +165,7 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
         % Ito correction:  -0.5 * v_i^2 * dt  (one per alive bond)
         ito_per_bond = -0.5 * v_alive.^2 * dt(k);             % [n_aliv x 1]
 
-        % Diffusion: -v_i * dW^{(i)}  (sign convention from slide 18)
+        % Diffusion: -v_i * dW^{(i)}
         diffusion = - bsxfun(@times, dW_alive, v_alive');     % [n_paths x n_aliv]
 
         % Update the log-bond on the alive block
@@ -191,7 +180,7 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
     end
 
     % --- Build the stochastic discount D(0, T_*) ------------------------
-    % BMM Markov-chain identity (slide 19):
+    % BMM Markov-chain identity:
     %       D(0, T_{n+1}) = prod_{j = 0}^{n} B_j(T_j)
     % We need D(0, T_{i+1}) for each payment date T_{i+1}, i = 1..n_caplets.
     % MATLAB indexing: payment date i corresponds to columns 1..i+1 of
@@ -235,3 +224,4 @@ function [price, std_err] = price_exotic_cap_mc(v_bmm, ...
     std_err = sqrt(sum(coupon_se.^2));        % conservative upper bound
 
 end
+
