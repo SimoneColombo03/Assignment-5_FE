@@ -68,11 +68,8 @@ function output = compute_caplets_maturities(flat_vols, dates_bootstrap, discoun
     % Option Expiry Time (Act/365) from today (t_0) to the reset date.
     T_expiry   = yearfrac(t0, reset_dates, DC_ACT365);
     
-    % Payment Time (Act/365) from today to the payment date.
-    T_payment  = yearfrac(t0, caplets_payment_dates, DC_ACT365);
-    
     % Continuous risk-free rate
-    r_eff = -log(df_caplets) ./ T_payment; 
+    r_eff = -log(df_caplets) ./ T_expiry; 
 
     % 7. Package Output
     output = struct('payment_dates', caplets_payment_dates, ...
