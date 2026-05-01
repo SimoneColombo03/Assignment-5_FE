@@ -63,7 +63,7 @@ fprintf('Total Vega: %.4f\n', vega);
 %% e. Coarse-grained DV01 (3 triangular bumps centred on 2y, 6y, 10y) and hedging with swaps
 % Calculate Coarse-grained Bucketed DV01
 coarse = coarse_DV01_triangular(datesSet, ratesSet, flat_vols, ...
-                                 spot_vols_matrix, flat_vols.strike(:), ...
+                                 flat_vols.strike(:), ...
                                  notional, start_date, maturity_date_unadj, ...
                                  first_coupon_rate, mode_after_6y, X);
 
@@ -85,8 +85,11 @@ delta_NPV = compute_delta_NPV_swap(ratesSet, dates, discounts, start_date, coars
 notional_swaps = compute_portfolio_hedged_with_swap(coarse, delta_NPV);
 
 % Display Hedging Results
-fprintf('\nHedge Ratios (Swap Notionals to buy/sell):\n');
-disp(notional_swaps);
+fprintf('\n----- POINT (e) Delta hedging with 2y, 6y, 10y par swaps -----\n');
+fprintf('   %-10s : %+15.2f EUR  (%s)\n', '2y swap',  notional_swaps(1), action_label(notional_swaps(1)));
+fprintf('   %-10s : %+15.2f EUR  (%s)\n', '6y swap',  notional_swaps(2), action_label(notional_swaps(2)));
+fprintf('   %-10s : %+15.2f EUR  (%s)\n', '10y swap', notional_swaps(3), action_label(notional_swaps(3)));
+
 %% f. Hedge vega with caps
 % Calculate the Structured Bond's Vega for buckets (0-6y and 6-10y).
 st_bond_vega_results = compute_st_bond_coarse_vega(dates, discounts, flat_vols, ...
@@ -105,9 +108,9 @@ cap_hedging_notionals = compute_vega_hedge_notionals(st_bond_vega_results, ...
                                                     vega_sensitivity_matrix);
 
 % Display Vega Hedging Results
- fprintf('\nVega Hedging:\n');
- disp(cap_hedging_notionals);
-
+fprintf('\n----- POINT (f) Vega hedging with 6y and 10y ATM caps -----\n');
+fprintf('   %-10s : %+15.2f EUR  (%s)\n', '6y cap',  cap_hedging_notionals(1), action_label(cap_hedging_notionals(1)));
+fprintf('   %-10s : %+15.2f EUR  (%s)\n', '10y cap', cap_hedging_notionals(2), action_label(cap_hedging_notionals(2)));
 %% g. Correction digital risk
 
 upfront_with_digital_risk = compute_upfront_dig_risk(notional, ...
