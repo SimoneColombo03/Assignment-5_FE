@@ -117,16 +117,16 @@ fprintf('  Upfront amount         : %.2f EUR\n', upfront_with_digital_risk*notio
 
 %% Case study 2
 
+lambda = 0.1;
+n_coupon = 15;
+spread = 5e-4;
+n_simulations = 1e6;
+
+
 v_bmm = calibrate_bmm_vols(spot_vols_matrix, flat_vols.strike(:), ...
-                           spot_vol_parameters, 15);
+                           spot_vol_parameters, n_coupon);
 
-[price, se] = price_exotic_cap_mc(v_bmm, spot_vol_parameters, ...
-                                  0.1, 15, 5e-4, 1e5, +1);
+[price_exotic_option, se_mc] = price_exotic_cap_mc(v_bmm, spot_vol_parameters, ...
+                                  lambda, n_coupon, spread, n_simulations);
 fprintf('\n----- Case Study 2: Exotic cap -----\n');
-fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price, se);
-
-
-[price_V2, se_V2] = price_exotic_cap_V_elisa_mc(v_bmm, spot_vol_parameters, ...
-                                  0.1, 15, 5e-4, 1e5, +1);
-fprintf('\n----- Case Study 2: Exotic cap -----\n');
-fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price_V2, se_V2);
+fprintf('Price (per unit notional): %.6f (std err: %.2e)\n', price_exotic_option, se_mc);

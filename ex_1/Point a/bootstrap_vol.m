@@ -76,7 +76,9 @@ function spot_vols = bootstrap_vol(flat_vols_at_strike, strike, spot_vol_paramet
         % Search for the root starting from the current flat vol.
         sigma_right = fzero(residual, flat_vols_at_strike(i));
         
-        % Populate the spot_vols vector using linear interpolation across the segment.
+        % Populate the spot_vols vector using linear interpolation across
+        % the segment (they are already on a line because of
+        % cap_increment_price, we just store them in a vector:
         spot_vols(idx_to_calibrate) = interp1(T_knots, [sigma_left; sigma_right], ...
                                       T_to_interp, 'linear');
     end
