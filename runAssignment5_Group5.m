@@ -7,7 +7,7 @@
 
 addpath('bootstrap',genpath('ex_1'),'ex_2');
 formatData='dd/mm/yyyy';
-[datesSet, ratesSet] = readExcelData_MAC('MktData_CurveBootstrap.xls', formatData);
+[datesSet, ratesSet] = readExcelData('MktData_CurveBootstrap.xls', formatData);
 [dates, discounts, ~] = bootstrap(datesSet, ratesSet); 
 flat_vols = readCapVols('flat_vol_data.xlsx');
 
