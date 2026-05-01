@@ -20,6 +20,11 @@ spot_vol_parameters = compute_caplets_maturities(flat_vols, dates, discounts);
 % Volatility Bootstrapping to extract the specific spot volatility of each caplet from the flat cap quotes.
 spot_vols_matrix = compute_spot_vols_Eur_3m(flat_vols, spot_vol_parameters);
 
+% Sample the caplet spot vols on the cap-maturity grid: for each cap year Y
+% we pick the caplet that fixes at Y (and pays at Y + 3m).
+spot_vols_cap_grid = spot_vols_on_cap_grid(spot_vols_matrix, flat_vols);
+print_spot_vols_table(spot_vols_cap_grid, flat_vols, 'LMM SPOT VOLS ON CAP GRID');
+
 % Plot the resulting Caplet Spot Volatility Surface and save it to a PDF.
 plot_spot_vol_surface(spot_vols_matrix, flat_vols, spot_vol_parameters, ...
                       'Caplet_Spot_Volatility_Surface.pdf');
